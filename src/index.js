@@ -7,7 +7,7 @@ import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 
-import authMiddleware from './middlewares/auth.middleware';
+import { authMiddleware } from './middlewares';
 import { connectDb } from './db';
 
 // get resolvers and typedefs for the graphql server
@@ -15,6 +15,7 @@ import { typeDefs, resolvers } from './graphql';
 import router from './routes';
 
 import { logger } from './utils';
+import { successHandler, errorHandler } from './utils';
 
 const startServer = async () => {
     // creating a server requires two parameters:
@@ -44,6 +45,9 @@ const startServer = async () => {
             await server.start();
 
             app.use(express.json());
+
+            app.use(successHandler);
+            app.use(errorHandler);
 
             // e.g. /api/v1/graphql
             app.use(`/api/${API_VERSION}/graphql`, expressMiddleware(server, {

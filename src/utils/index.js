@@ -1,6 +1,8 @@
-import logger from './logger';
-import { generateToken, verifyToken } from './auth';
+const { generateToken, verifyToken } = require('./auth');
+const { successHandler, errorHandler } = require('./morgan');
 
-module.exports.logger = logger;
+module.exports.logger = require('./logger');
 module.exports.generateToken = generateToken;
 module.exports.verifyToken = verifyToken;
+module.exports.successHandler = successHandler;
+module.exports.errorHandler = errorHandler;

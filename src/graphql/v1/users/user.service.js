@@ -59,7 +59,6 @@ class UserService {
         const { email, password } = input;
 
         const user = await User.findOne({ where: { email }});
-        logger.info(user.toJSON());
 
         if (!user) {
             throw new GraphQLError('User does not exist', {
