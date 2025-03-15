@@ -1,6 +1,6 @@
 const connectMongodb = require('./mongo/connectMongodb');
 const connectPostgres = require('./postgres/connectPostgres');
-const logger = require('../utils');
+const { logger } = require('../utils');
 
 const connectDb = async () => {
     logger.info('Connecting mongodb...');

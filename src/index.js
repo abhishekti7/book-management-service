@@ -1,4 +1,3 @@
-
 // to load all the environment variables
 require('dotenv').config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV}`});
 
@@ -7,15 +6,15 @@ import express from 'express';
 
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
-import { startStandaloneServer } from '@apollo/server/standalone';
 
+import authMiddleware from './middlewares/auth.middleware';
 import { connectDb } from './db';
 
-// custom logger using winston
+// get resolvers and typedefs for the graphql server
 import { typeDefs, resolvers } from './graphql';
+import router from './routes';
 
-
-import logger from './utils';
+import { logger } from './utils';
 
 const startServer = async () => {
     // creating a server requires two parameters:
@@ -23,21 +22,42 @@ const startServer = async () => {
     const server = new ApolloServer({
         typeDefs,
         resolvers,
+        formatError: (formattedError, error) => {
+            logger.error('GraphQL Error: ');
+            logger.error(error);
+
+            return {
+                message: 'INTERNAL SERVER ERROR',
+                path: formattedError.path,
+            }
+        }
     });
 
+    const app = express();
+
     const port = process.env.PORT || 4000;
+    const API_VERSION = process.env.API_VERSION || 'v1';
 
     connectDb()
         .then(async () => {
             // if database is connected successfully, then start the server
-            const { url } = await startStandaloneServer(server, {
-                listen: { port },
-            });
+            await server.start();
 
-            logger.info(`Server started and listening on: ${url}`);
+            app.use(express.json());
+
+            // e.g. /api/v1/graphql
+            app.use(`/api/${API_VERSION}/graphql`, expressMiddleware(server, {
+                context: authMiddleware,
+            }));
+
+            app.use(`/api/${API_VERSION}`, router);
+
+            app.listen(port, () => {
+                logger.info(`Server started and listening on ${port}`);
+            })
         })
         .catch(error => {
-            logger.error('Error connecting to mongodb');
+            logger.error('Error starting server');
             logger.error(error);
             process.exit(1);
         })

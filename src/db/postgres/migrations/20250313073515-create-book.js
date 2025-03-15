@@ -7,8 +7,7 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
+        type: Sequelize.INTEGER
       },
       title: {
         type: Sequelize.STRING,
@@ -21,7 +20,7 @@ module.exports = {
         type: Sequelize.DATEONLY
       },
       author_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.INTEGER,
         allowNull: false,
         references: {
           model: 'Authors',
