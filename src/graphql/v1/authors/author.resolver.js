@@ -1,7 +1,7 @@
-const { GraphQLError } = require('graphql');
-const { ApolloServerErrorCode } = require('@apollo/server/errors');
+const { GraphQLError } = require("graphql");
+const { ApolloServerErrorCode } = require("@apollo/server/errors");
 
-const authorService = require('./author.service');
+const authorService = require("./author.service");
 
 const authorResolver = {
     Author: {
@@ -10,7 +10,7 @@ const authorResolver = {
         },
         metadata: async (parent) => {
             return await authorService.getAuthorMetadata(parent.id);
-        }
+        },
     },
 
     Query: {
@@ -20,36 +20,37 @@ const authorResolver = {
 
         author: async (_, id) => {
             return await authorService.getAuthorById(id);
-        }
-        
+        },
     },
     Mutation: {
-        createAuthor: async (_, { input, metadata }, { user }) => {
-            if (!user) {
+        // only admin can create an author
+        createAuthor: async (_, { input, metadata }, { user, isAdmin }) => {
+            if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
             try {
-                return await authorService.createAuthor(input, metadata)
+                return await authorService.createAuthor(input, metadata);
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
 
-        updateAuthor: async (_, { id, input }, { user }) => {
-            if (!user) {
+        // only admin can update an author
+        updateAuthor: async (_, { id, input }, { user, isAdmin }) => {
+            if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -59,17 +60,22 @@ const authorResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
-                })
+                    },
+                });
             }
         },
-        
-        updateAuthorMetadata: async (_, { id, metadata }, { user }) => {
-            if (!user) {
+
+        // only admin can update author metadata
+        updateAuthorMetadata: async (
+            _,
+            { id, metadata },
+            { user, isAdmin }
+        ) => {
+            if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -79,17 +85,18 @@ const authorResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
 
-        deleteAuthor: async (_, { id }, { user }) => {
-            if (!user) {
+        // only admin can delete an author
+        deleteAuthor: async (_, { id }, { user, isAdmin }) => {
+            if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -99,11 +106,11 @@ const authorResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
-        }
-    }
+        },
+    },
 };
 
 module.exports = authorResolver;

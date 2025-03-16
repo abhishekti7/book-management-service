@@ -4,6 +4,7 @@ const userTypeDef = `#graphql
         first_name: String!
         last_name: String
         email: String!
+        userType: Int!
         createdAt: String!
         updatedAt: String!
     }
@@ -17,6 +18,7 @@ const userTypeDef = `#graphql
         first_name: String!
         last_name: String
         email: String!
+        userType: Int!
         password: String!
     }
 

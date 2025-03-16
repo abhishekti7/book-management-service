@@ -14,7 +14,11 @@ const userResolvers = {
         },
 
         login: async (_, { input }) => {
-            return await userService.login(input);
+            try {
+                return await userService.login(input);
+            } catch (error) {
+                console.log(error);
+            }
         },
     },
 };

@@ -1,10 +1,10 @@
-const { Author } = require('../../../db/postgres/models');
-const { BookMetadata } = require('../../../db/mongo/models');
-const { logger } = require('../../../utils');
-const { GraphQLError } = require('graphql');
-const { ApolloServerErrorCode } = require('@apollo/server/errors');
+const { Author } = require("../../../db/postgres/models");
+const { BookMetadata } = require("../../../db/mongo/models");
+const { logger } = require("../../../utils");
+const { GraphQLError } = require("graphql");
+const { ApolloServerErrorCode } = require("@apollo/server/errors");
 
-const bookService = require('./book.service');
+const bookService = require("./book.service");
 
 const bookResolver = {
     Book: {
@@ -19,7 +19,7 @@ const bookResolver = {
                 logger.error(`Error fetching book metadata: ${error}`);
                 return null;
             }
-        }
+        },
     },
 
     Query: {
@@ -30,18 +30,18 @@ const bookResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
-        book: async (_, { id, }) => {
+        book: async (_, { id }) => {
             try {
                 return await bookService.getBookById(id);
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
@@ -53,19 +53,20 @@ const bookResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
     },
 
     Mutation: {
-        createBook: async (_, { input, metadata }, { user }) => {
-            if (!user) {
+        // only admin can create a book
+        createBook: async (_, { input, metadata }, { user, isAdmin }) => {
+            if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -75,17 +76,18 @@ const bookResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
 
-        updateBook: async (_, { id, input }, { user }) => {
-            if (!user) {
+        // only admin can update a book
+        updateBook: async (_, { id, input }, { user, isAdmin }) => {
+            if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -95,17 +97,18 @@ const bookResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
 
-        deleteBook: async (_, { id }, { user }) => {
+        // only admin can delete a book
+        deleteBook: async (_, { id }, { user, isAdmin }) => {
             if (!user) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -115,7 +118,7 @@ const bookResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
@@ -125,7 +128,7 @@ const bookResolver = {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -135,7 +138,7 @@ const bookResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
@@ -145,17 +148,21 @@ const bookResolver = {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
             try {
-                return await bookService.updateBookReview(id, { rating, comment }, user.id);
+                return await bookService.updateBookReview(
+                    id,
+                    { rating, comment },
+                    user.id
+                );
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
         },
@@ -165,7 +172,7 @@ const bookResolver = {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
 
@@ -175,11 +182,11 @@ const bookResolver = {
                 throw new GraphQLError(error.message, {
                     extensions: {
                         code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
-                    }
+                    },
                 });
             }
-        }
-    }
-}
+        },
+    },
+};
 
 module.exports = bookResolver;

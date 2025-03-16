@@ -55,11 +55,10 @@ class UserService {
     }
 
     async login(input) {
-        console.log("loggin in");
         const { email, password } = input;
-        console.log(email, password);
+
         const user = await User.findOne({ where: { email } });
-        console.log(user);
+
         if (!user) {
             throw new GraphQLError("User does not exist", {
                 extensions: {

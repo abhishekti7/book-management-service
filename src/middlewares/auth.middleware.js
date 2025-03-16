@@ -41,8 +41,11 @@ const getUser = async (req) => {
  */
 const authMiddleware = async ({ req }) => {
     const user = await getUser(req);
-
-    return { user };
+    console.log(user);
+    return {
+        user,
+        isAdmin: user ? (user.userType == 1 ? true : false) : false,
+    };
 };
 
 module.exports = authMiddleware;
