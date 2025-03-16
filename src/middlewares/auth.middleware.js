@@ -1,22 +1,22 @@
-const { verifyToken } = require('../utils');
-const { User } = require('../db/postgres/models');
-const { logger } = require('../utils');
+const { verifyToken } = require("../utils");
+const { User } = require("../db/postgres/models");
+const { logger } = require("../utils");
 
 /**
- * 
- * @param {*} req 
- * @returns 
+ *
+ * @param {*} req
+ * @returns
  */
 const getUser = async (req) => {
     // get bearer token from the request header
     const authHeader = req?.headers?.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return null;
     }
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
 
-    // decode the jwt token 
+    // decode the jwt token
     const decoded = await verifyToken(token);
 
     if (!decoded) {
@@ -32,16 +32,16 @@ const getUser = async (req) => {
         logger.error(error);
         return null;
     }
-}
+};
 
 /**
- * 
- * @param {*} param0 
- * @returns 
+ *
+ * @param {*} param0
+ * @returns
  */
 const authMiddleware = async ({ req }) => {
     const user = await getUser(req);
-    
+
     return { user };
 };
 

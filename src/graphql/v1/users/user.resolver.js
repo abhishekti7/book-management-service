@@ -1,8 +1,8 @@
-const userService = require('./user.service');
+const userService = require("./user.service");
 
 const userResolvers = {
     Query: {
-        me: async (_, __, { user, isAuth }) => {
+        me: async (_, __, { user }) => {
             if (!user) return null;
 
             return user;
@@ -13,11 +13,10 @@ const userResolvers = {
             return await userService.register(input);
         },
 
-        login: async (_, { input }, ) => {
+        login: async (_, { input }) => {
             return await userService.login(input);
-        }
-
-    }
-}
+        },
+    },
+};
 
 module.exports = userResolvers;
