@@ -15,10 +15,11 @@ const authorResolver = {
 
     Query: {
         authors: async (_, input) => {
+            console.log(input);
             return await authorService.getAuthors(input);
         },
 
-        author: async (_, id) => {
+        author: async (_, { id }) => {
             return await authorService.getAuthorById(id);
         },
     },
@@ -45,7 +46,7 @@ const authorResolver = {
         },
 
         // only admin can update an author
-        updateAuthor: async (_, { id, input }, { user, isAdmin }) => {
+        updateAuthor: async (_, { id, input, metadata }, { user, isAdmin }) => {
             if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
@@ -55,7 +56,7 @@ const authorResolver = {
             }
 
             try {
-                return await authorService.updateAuthor(id, input);
+                return await authorService.updateAuthor(id, input, metadata);
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {

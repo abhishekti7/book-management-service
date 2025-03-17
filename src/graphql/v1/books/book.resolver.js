@@ -1,4 +1,4 @@
-const { Author } = require("../../../db/postgres/models");
+const { Author, User } = require("../../../db/postgres/models");
 const { BookMetadata } = require("../../../db/mongo/models");
 const { logger } = require("../../../utils");
 const { GraphQLError } = require("graphql");
@@ -19,6 +19,12 @@ const bookResolver = {
                 logger.error(`Error fetching book metadata: ${error}`);
                 return null;
             }
+        },
+    },
+
+    Review: {
+        user: async (parent) => {
+            return await User.findByPk(parent.user_id);
         },
     },
 
@@ -82,7 +88,7 @@ const bookResolver = {
         },
 
         // only admin can update a book
-        updateBook: async (_, { id, input }, { user, isAdmin }) => {
+        updateBook: async (_, { id, input, metadata }, { user, isAdmin }) => {
             if (!user || !isAdmin) {
                 throw new GraphQLError("User is not authorized", {
                     extensions: {
@@ -92,7 +98,7 @@ const bookResolver = {
             }
 
             try {
-                return await bookService.updateBook(id, input);
+                return await bookService.updateBook(id, input, metadata);
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {

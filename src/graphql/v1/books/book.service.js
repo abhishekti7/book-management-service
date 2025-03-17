@@ -1,32 +1,33 @@
-const { Book, Author } = require('../../../db/postgres/models');
-const { BookMetadata, Review } = require('../../../db/mongo/models');
+const { Book, Author } = require("../../../db/postgres/models");
+const { BookMetadata, Review } = require("../../../db/mongo/models");
 
-const { Op } = require('sequelize');
-const { logger } = require('../../../utils');
+const { Op } = require("sequelize");
+const { logger } = require("../../../utils");
+const moment = require("moment");
 
 class BookService {
     /**
      * gets all books based on filters
-     * @param {*} param0 
-     * @returns 
+     * @param {*} param0
+     * @returns
      */
     async getBooks({
         page = 1,
         limit = 10,
         filter = {},
-        sortBy = 'createdAt',
-        order = 'DESC',
+        sortBy = "createdAt",
+        order = "DESC",
     }) {
         try {
             const whereConditions = this.buildWhereConditions(filter);
 
-            const offset = ( page - 1 ) * limit;
+            const offset = (page - 1) * limit;
 
             const count = await Book.count({ where: whereConditions });
 
             const books = await Book.findAll({
                 where: whereConditions,
-                order: [[ sortBy, order ]],
+                order: [[sortBy, order]],
                 limit,
                 offset,
             });
@@ -36,7 +37,7 @@ class BookService {
                 total: count,
                 page,
                 hasMore: books.length < limit,
-            }
+            };
         } catch (error) {
             logger.error(error);
             throw new Error(`Error fetching books: ${error.message}`);
@@ -45,8 +46,8 @@ class BookService {
 
     /**
      * fetches book by id
-     * @param {*} id 
-     * @returns 
+     * @param {*} id
+     * @returns
      */
     async getBookById(id) {
         try {
@@ -59,29 +60,44 @@ class BookService {
 
     /**
      * creates a new book and adds metadata
-     * @param {*} bookData 
-     * @param {*} metaData 
-     * @returns 
+     * @param {*} bookData
+     * @param {*} metaData
+     * @returns
      */
     async createBook(bookData, metaData) {
         try {
             if (!bookData.author_id) {
-                throw new Error('Invalid input');
+                throw new Error("Invalid input");
             }
 
             const author = await Author.findByPk(bookData.author_id);
 
             if (!author) {
-                throw new Error('Author not found');
+                throw new Error("Author not found");
             }
 
             const book = await Book.create(bookData);
 
             if (metaData) {
-                await BookMetadata.create({
+                const existingMetadata = await BookMetadata.findOne({
                     book_id: book.id,
-                    ...metaData,
                 });
+
+                if (existingMetadata) {
+                    await BookMetadata.updateOne(
+                        {
+                            book_id: book.id,
+                        },
+                        {
+                            ...metaData,
+                        }
+                    );
+                } else {
+                    await BookMetadata.create({
+                        book_id: book.id,
+                        ...metaData,
+                    });
+                }
             }
 
             return book;
@@ -93,36 +109,55 @@ class BookService {
 
     /**
      * updates book given book id
-     * @param {*} id 
-     * @param {*} bookData 
-     * @returns 
+     * @param {*} id
+     * @param {*} bookData
+     * @returns
      */
-    async updateBook(id, bookData) {
+    async updateBook(id, bookData, metadata) {
         try {
             const book = await Book.findByPk(id);
 
             if (!book) {
-                throw new Error('Book not found');
+                throw new Error("Book not found");
             }
 
             if (bookData.author_id) {
                 const author = await Author.findByPk(bookData.author_id);
-                
+
                 if (!author) {
-                    throw new Error('Author not found');
+                    throw new Error("Author not found");
                 }
             }
 
-            const result = await Book.update(
-                bookData,
-                {
-                    where: {
-                        id: id,
-                    },
-                    returning: true,
-                    plain: true
+            const result = await Book.update(bookData, {
+                where: {
+                    id: id,
+                },
+                returning: true,
+                plain: true,
+            });
+
+            if (metadata) {
+                const existingMetadata = await BookMetadata.findOne({
+                    book_id: id,
+                });
+
+                if (existingMetadata) {
+                    await BookMetadata.updateOne(
+                        {
+                            book_id: id,
+                        },
+                        {
+                            ...metadata,
+                        }
+                    );
+                } else {
+                    await BookMetadata.insertOne({
+                        book_id: id,
+                        ...metadata,
+                    });
                 }
-            );
+            }
 
             return result[1];
         } catch (error) {
@@ -136,7 +171,7 @@ class BookService {
             const book = await Book.findByPk(id);
 
             if (!book) {
-                throw new Error('Book not found');
+                throw new Error("Book not found");
             }
 
             await BookMetadata.deleteOne({ book_id: id });
@@ -145,7 +180,7 @@ class BookService {
             await book.destroy({
                 where: {
                     id: id,
-                }
+                },
             });
 
             return true;
@@ -165,10 +200,7 @@ class BookService {
                     ...metadata,
                 });
             } else {
-                await BookMetadata.updateOne(
-                    { book_id: id },
-                    { ...metadata },
-                );
+                await BookMetadata.updateOne({ book_id: id }, { ...metadata });
 
                 metadata = await BookMetadata.findOne({ book_id: id });
             }
@@ -182,13 +214,23 @@ class BookService {
 
     /**
      * returns all the reviews for the books
-     * @param {*} book_id 
+     * @param {*} book_id
      */
     async getBookReviews(book_id) {
         try {
-            const reviews = await Review.find({ book_id: book_id });
+            const reviews = await Review.find({ book_id: book_id }, null, {
+                sort: { created_at: -1 },
+            });
 
-            return reviews;
+            const formattedReviews = reviews.map((item) => {
+                return {
+                    ...item.toJSON(),
+                    id: item._id.toString(),
+                    created_at: moment(item.created_at).format("YYYY-MM-DD"),
+                };
+            });
+
+            return formattedReviews;
         } catch (error) {
             logger.error(error);
             throw new Error(`Error fetching book reviews: ${error.message}`);
@@ -197,9 +239,9 @@ class BookService {
 
     /**
      * creates a book review
-     * @param {*} input 
-     * @param {*} userId 
-     * @returns 
+     * @param {*} input
+     * @param {*} userId
+     * @returns
      */
     async createBookReview(input, userId) {
         try {
@@ -215,7 +257,6 @@ class BookService {
         }
     }
 
-
     async updateBookReview(bookId, data, userId) {
         try {
             const review = await Review.findOne({
@@ -224,12 +265,12 @@ class BookService {
             });
 
             if (!review) {
-                throw new Error('Review not found');
+                throw new Error("Review not found");
             }
 
             await Review.updateOne(
                 { book_id: bookId, user_id: userId },
-                { ...data },
+                { ...data }
             );
 
             return review;
@@ -243,7 +284,7 @@ class BookService {
         try {
             await Review.deleteOne({
                 book_id: bookId,
-                user_id: userId
+                user_id: userId,
             });
             return true;
         } catch (error) {
@@ -258,7 +299,7 @@ class BookService {
         if (filters.title) {
             whereConditions.title = {
                 [Op.iLike]: `%${filters.title}%`,
-            }
+            };
         }
 
         if (filters.author_id) {
@@ -268,26 +309,26 @@ class BookService {
         if (filters.published_before) {
             whereConditions.published_date = {
                 ...whereConditions.published_date,
-                [Op.lt]: new Date(filters.published_before)
-            }
+                [Op.lt]: new Date(filters.published_before),
+            };
         }
 
         if (filters.published_after) {
             whereConditions.published_date = {
                 ...whereConditions.published_date,
-                [Op.gt]: new Date(filters.published_after)
-            }
+                [Op.gt]: new Date(filters.published_after),
+            };
         }
 
         if (filters.search) {
             whereConditions[Op.or] = [
                 { title: { [Op.iLike]: `%${filters.search}%` } },
-                { description: { [Op.iLike]: `%${filters.search}%` } }
-            ]
+                { description: { [Op.iLike]: `%${filters.search}%` } },
+            ];
         }
 
         return whereConditions;
     }
 }
 
-module.exports = new BookService;
+module.exports = new BookService();

@@ -1,4 +1,4 @@
-const mongooose = require('mongoose');
+const mongooose = require("mongoose");
 
 const ReviewSchema = new mongooose.Schema({
     book_id: {
@@ -26,6 +26,6 @@ const ReviewSchema = new mongooose.Schema({
 });
 
 // compound index to make sure that user can add only one review on a book
-ReviewSchema.index({ book_id: 1, user_id: 1 }, { unique: true });
+// ReviewSchema.index({ book_id: 1, user_id: 1 }, { unique: true });
 
-module.exports = mongooose.model('Review', ReviewSchema);
+module.exports = mongooose.model("Review", ReviewSchema);

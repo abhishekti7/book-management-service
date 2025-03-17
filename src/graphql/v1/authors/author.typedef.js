@@ -41,7 +41,7 @@ const authorTypeDef = `#graphql
     input AuthorMetadataInput {
         social_media: SocialMediaInput
         nationality: String
-        languages: String
+        languages: [String]
     }
 
     input AuthorUpdateInput {
@@ -78,7 +78,7 @@ const authorTypeDef = `#graphql
 
     type Mutation {
         createAuthor(input: AuthorInput!, metadata: AuthorMetadataInput): Author!
-        updateAuthor(id: ID!, input: AuthorUpdateInput!): Author!
+        updateAuthor(id: ID!, input: AuthorUpdateInput!, metadata: AuthorMetadataInput): Author!
         updateAuthorMetadata(id: ID!, metadata: AuthorMetadataInput!): AuthorMetadata!
         deleteAuthor(id: ID!): Boolean!
     }

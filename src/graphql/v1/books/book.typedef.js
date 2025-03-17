@@ -26,6 +26,7 @@ const bookSchema = `#graphql
         id: ID!
         book_id: ID!
         user_id: ID!
+        user: User
         rating: Int!
         comment: String
         created_at: String!
@@ -55,6 +56,7 @@ const bookSchema = `#graphql
     input BookMetadataInput {
         genres: [String]
         tags: [String]
+        average_rating: Float
         page_count: Int
         language: String
     }
@@ -89,7 +91,7 @@ const bookSchema = `#graphql
 
     type Mutation {
         createBook(input: BookInput!, metadata: BookMetadataInput): Book!
-        updateBook(id: ID!, input: BookUpdateInput!): Book!
+        updateBook(id: ID!, input: BookUpdateInput!, metadata: BookMetadataInput): Book!
         deleteBook(id: ID!): Boolean!
         createBookReview(input: ReviewInput!): Review!
         updateBookReview(id: ID!, rating: Int, comment: String): Review!

@@ -7,7 +7,7 @@ const BookMetadataSchema = new mongoose.Schema({
         unique: true,
     },
     genres: {
-        type: String,
+        type: [String],
     },
     tags: [
         {
