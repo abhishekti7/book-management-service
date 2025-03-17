@@ -151,19 +151,18 @@ class AuthorService {
                 throw new Error(`Author not found`);
             }
 
-            console.log(author);
-            await Author.destroy({
-                where: {
-                    id: id,
-                },
-            });
-
             // delete all books associated with this author.
             // ideally we will send a message to a messaging queue here
             // to defer deletion of book and author metadata to a later time
             await Book.destroy({
                 where: {
                     author_id: id,
+                },
+            });
+
+            await Author.destroy({
+                where: {
+                    id: id,
                 },
             });
 

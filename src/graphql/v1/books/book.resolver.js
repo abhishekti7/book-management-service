@@ -1,5 +1,5 @@
 const { Author, User } = require("../../../db/postgres/models");
-const { BookMetadata } = require("../../../db/mongo/models");
+const { BookMetadata, Review } = require("../../../db/mongo/models");
 const { logger } = require("../../../utils");
 const { GraphQLError } = require("graphql");
 const { ApolloServerErrorCode } = require("@apollo/server/errors");
@@ -14,7 +14,26 @@ const bookResolver = {
 
         metadata: async (parent) => {
             try {
-                return await BookMetadata.findOne({ book_id: parent.id });
+                const metadata = await BookMetadata.findOne({
+                    book_id: parent.id,
+                });
+
+                const reviewsCount = await Review.countDocuments({
+                    book_id: parent.id,
+                });
+
+                let finalMetadata = {
+                    ratings_count: reviewsCount,
+                };
+
+                if (metadata) {
+                    finalMetadata = {
+                        ...finalMetadata,
+                        ...metadata.toJSON(),
+                    };
+                }
+
+                return finalMetadata;
             } catch (error) {
                 logger.error(`Error fetching book metadata: ${error}`);
                 return null;

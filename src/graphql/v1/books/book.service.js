@@ -36,7 +36,7 @@ class BookService {
                 books,
                 total: count,
                 page,
-                hasMore: books.length < limit,
+                hasMore: books.length === limit,
             };
         } catch (error) {
             logger.error(error);

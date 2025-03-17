@@ -27,7 +27,7 @@ const getUser = async (req) => {
         // get the user from the decoded id
         const user = await User.findByPk(decoded.id);
 
-        return user.toJSON();
+        return user ? user.toJSON() : null;
     } catch (error) {
         logger.error(error);
         return null;
