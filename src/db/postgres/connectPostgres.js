@@ -8,6 +8,7 @@ const connectPostgres = async () => {
     return new Promise(async (resolve, reject) => {
         try {
             logger.info("authenticating...");
+            console.log(process.env.DATABASE_URL);
             await sequelize.authenticate();
 
             logger.info("syncing...");
