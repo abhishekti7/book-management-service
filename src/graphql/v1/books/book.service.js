@@ -1,9 +1,9 @@
+const moment = require("moment");
 const { Book, Author } = require("../../../db/postgres/models");
 const { BookMetadata, Review } = require("../../../db/mongo/models");
 
 const { Op } = require("sequelize");
 const { logger } = require("../../../utils");
-const moment = require("moment");
 
 class BookService {
     /**
@@ -25,12 +25,16 @@ class BookService {
 
             const count = await Book.count({ where: whereConditions });
 
-            const books = await Book.findAll({
-                where: whereConditions,
-                order: [[sortBy, order]],
-                limit,
-                offset,
-            });
+            let books = [];
+
+            if (count > 0) {
+                books = await Book.findAll({
+                    where: whereConditions,
+                    order: [[sortBy, order]],
+                    limit,
+                    offset,
+                });
+            }
 
             return {
                 books,
@@ -304,6 +308,19 @@ class BookService {
 
         if (filters.author_id) {
             whereConditions.author_id = filters.author_id;
+        }
+
+        if (filters.published_on) {
+            const startDate = moment();
+            const endDate = moment();
+            startDate.date(1).month(0).year(filters.published_on);
+            endDate.date(31).month(11).year(filters.published_on);
+
+            whereConditions.published_date = {
+                ...whereConditions.published_date,
+                [Op.lte]: endDate,
+                [Op.gte]: startDate,
+            };
         }
 
         if (filters.published_before) {

@@ -59,6 +59,7 @@ const authorTypeDef = `#graphql
 
     input AuthorFilterInput {
         name: String
+        born_on: String
         born_after: String
         born_before: String
         search: String

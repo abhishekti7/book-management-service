@@ -1,4 +1,5 @@
-const { Op, where } = require("sequelize");
+const moment = require("moment");
+const { Op } = require("sequelize");
 const { Author, Book } = require("../../../db/postgres/models");
 const { AuthorMetadata } = require("../../../db/mongo/models");
 const { logger } = require("../../../utils");
@@ -255,6 +256,17 @@ class AuthorService {
         if (filters.name) {
             // like query on author name
             whereConditions.name = { [Op.iLike]: `%${filters.name}%` };
+        }
+
+        if (filters.born_on) {
+            const startDate = moment().year(filters.born_on).date(1).month(0);
+            const endDate = moment().year(filters.born_on).date(31).month(11);
+
+            whereConditions.date_of_birth = {
+                ...whereConditions.date_of_birth,
+                [Op.gte]: startDate,
+                [Op.lte]: endDate,
+            };
         }
 
         if (filters.born_after) {

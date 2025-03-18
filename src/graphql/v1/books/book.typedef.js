@@ -70,6 +70,7 @@ const bookSchema = `#graphql
     input BookFilterInput {
         title: String
         author_id: ID
+        published_on: String
         published_after: String
         published_before: String
         search: String
