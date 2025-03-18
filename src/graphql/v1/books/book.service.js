@@ -79,8 +79,12 @@ class BookService {
             if (!author) {
                 throw new Error("Author not found");
             }
-
-            const book = await Book.create(bookData);
+            console.log(bookData);
+            const book = await Book.create({
+                ...bookData,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
 
             if (metaData) {
                 const existingMetadata = await BookMetadata.findOne({

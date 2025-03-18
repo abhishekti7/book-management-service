@@ -13,8 +13,8 @@ class AuthorService {
         page = 1,
         limit = 10,
         filter = {},
-        sortBy = "createdAt",
-        order = "DESC",
+        sortBy = "id",
+        order = "ASC",
     }) {
         try {
             const whereConditions = this.buildFilterConditions(filter);
@@ -66,6 +66,8 @@ class AuthorService {
             const author = await Author.create({
                 ...authorData,
                 date_of_birth: new Date(authorData.date_of_birth),
+                createdAt: new Date(),
+                updatedAt: new Date(),
             });
 
             // create metadata record if present
